@@ -1,0 +1,624 @@
+
+%% Analyse OPTOGENETICS experiments in PCF arena.
+
+% Made for Setd5/VGlut2 OPTO experiments from May 2021 - for Burnett et al.
+
+% These experiments are looking at evoked defensive behaviours in ASD mouse  models when they are injected with AAV9 ChR into either the SC or the PAG.
+% These experiments look at the effect of changing laser power, pulse width and pulse frequency on the behaviour elicited.
+
+% Created by Burnett - Nov 2021
+
+% xy_opto_infoA = xy_opto_info; 
+% xy_analysisA = xy_analysis;
+% xy_optoA = xy_opto;
+
+%% 1 - Initiailise variables
+% Open xy_opto and xy_opto_info
+
+% Number of trials.
+n = numel(xy_opto_infoA(:,1));
+col = 'r';
+frames_b4 = 600;
+
+% For Laser Power and Pulse Width tests this is true - not for Frequency tests.
+total_lighton_frames = 60;  % light was on for 1s. - 60 frames.
+
+all_animals = unique(string(xy_opto_infoA.Animal));
+n_animals = numel(all_animals);
+
+
+%% CHECK
+
+all_FR = unique(cell2mat(xy_opto_infoA.FreqPulse));
+all_PW = unique(cell2mat(xy_opto_infoA.T_pulse));
+all_LP = unique(cell2mat(xy_opto_infoA.EC));
+
+
+%% PLOTS % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%% P1 - Line plots for each animal - Different code for Laser Power/ Pulse Width / Frequency
+
+n = numel(xy_optoA(:,1));
+col = 'r';
+frames_b4 = 600;
+total_lighton_frames = 60;  % light was on for 1s. - 60 frames.
+
+all_animals = unique(string(xy_opto_infoA.Animal));
+n_animals = numel(all_animals);
+
+% EC
+
+for i = 1:n_animals
+    ani = string(all_animals{i});
+    all_ani = find(xy_opto_infoA.Animal == ani);
+    n_trials_ani = numel(all_ani);
+    
+    all_EC = unique(cell2mat(xy_opto_infoA.EC));
+    n_EC = numel(all_EC);
+    figure
+    
+    for j = 1:n_EC
+        EC_str = all_EC(j,1);
+        all_ani_EC = find(cell2mat(xy_opto_infoA.EC) == EC_str & xy_opto_infoA.Animal == ani); %& cell2mat(xy_opto_infoA.DShelt_Start) >0
+        
+        %         if EC_str == 0 || EC_str == 1
+        %             v2 = 0.85;
+        %             col = [v2 v2 v2];
+        %         elseif EC_str > 0
+        %             v2 = (1-(j/n_EC))+(0.02*j);
+        % %             v2 = 1-(EC_str/20);
+        %             col = [v2 v2 v2];
+        %         end
+        
+        col = 1 -[j/n_EC j/n_EC j/n_EC];
+        
+        if ~isempty(all_ani_EC)
+            if numel(all_ani_EC)>1
+                av_resp = mean(xy_optoA(all_ani_EC, :));
+            elseif numel(all_ani_EC)==1
+                av_resp = (xy_optoA(all_ani_EC, :));
+            end
+            %             av_resp = smooth(av_resp);
+            plot(av_resp, 'Color', col, 'LineWidth', 1.2);
+            hold on
+        end
+        plot([frames_b4 frames_b4], [0 90], 'k:', 'LineWidth', 1.2)
+        plot([frames_b4+total_lighton_frames frames_b4+total_lighton_frames], [0 90], 'k:', 'LineWidth', 1)
+        xticklabels({''})
+    end
+    title(ani)
+    axis([500 800 0 60])
+    box off
+    ylabel('Speed - cm/s')
+    xticks([510, 540, 570, 600, 630, 660, 690, 720, 750, 780])
+    xticklabels({'-1.5', '-1', '-0.5', '0', '0.5', '1', '1.5', '2', '2.5', '3'})
+    ax = gca;
+    ax.FontSize = 14;
+    ax.TickDir = 'out';
+    ax.LineWidth = 1.2;
+end
+
+
+
+%% P2 - Line plot but for genotype not for individual animals
+
+% ECs CHOSEN: 1.75, 1.9, 2, 2.25, 2.5, 2.75, 3, 3.25
+%[4,6,8,12,15,17,19,20]
+
+all_EC = unique(cell2mat(xy_opto_infoA.EC));
+n_EC = numel(all_EC);
+    
+cols = linspace(0.8,0, 9);
+cols2 = linspace(0.8,0,9);
+% n_EC = 8;
+% colourss = [];
+
+for i = 1:2
+    if i ==1
+        all_ani = find(string(xy_opto_infoA.Geno) == "wt");
+        n_trials_ani = numel(all_ani);
+        
+        figure
+        rectangle('Position', [frames_b4 0 60 90], 'FaceColor', [0.67 0.84 0.9, 0.4], 'EdgeColor', [0.67 0.84 0.9]) %xy wh
+        hold on
+        v = 1;
+        
+        for j = 1:n_EC%[3,4,8,12,15,17,19,20]  %1:n_EC  %[2,3,5,8,10,11,12] [3,6,8,12,15,17,19,20] %
+            EC_str = all_EC(j,1);
+            all_ani_EC = find(cell2mat(xy_opto_infoA.EC) == EC_str & string(xy_opto_infoA.Geno) == "wt" & cell2mat(xy_opto_infoA.SpAt)>2); %& cell2mat(xy_opto_infoA.DShelt_LIGHT) >5 & cell2mat(xy_opto_infoA.Return2Shelter)==1
+            
+            %             col = 1 -[v/n_EC v/n_EC v/n_EC]*0.8;
+            col = [cols(v), cols(v), cols(v)];
+            
+            if ~isempty(all_ani_EC)
+                if numel(all_ani_EC)>1
+                    av_resp = mean(xy_optoA(all_ani_EC, :));
+                else
+                    av_resp = (xy_optoA(all_ani_EC, :));
+                end
+                %                 if j == 9
+                %                 av_resp(550:570) = linspace(av_resp(550), av_resp(570), 21);
+                %                 end
+                plot(av_resp, 'Color', col, 'LineWidth', 1.4);
+                hold on
+            end
+            %             plot([frames_b4 frames_b4], [0 90], 'k:', 'LineWidth', 1)
+            %             plot([frames_b4+total_lighton_frames frames_b4+total_lighton_frames], [0 90], 'k:', 'LineWidth', 1)
+            xticklabels({''})
+            v = v+1;
+            %             colourss(v) = col(1);
+        end
+        axis([500 800 0 50])
+        box off
+        ylabel('Speed (cm s^-1)')
+        %         xticks([510, 540, 570, 600, 630, 660, 690, 720, 750, 780])
+        %         xticks([frames_b4-90, frames_b4-60, frames_b4-30, frames_b4, frames_b4+30, frames_b4+60, frames_b4+90, frames_b4+120, frames_b4+150, frames_b4+180])
+        %         xticklabels({'-1.5', '-1', '-0.5', '0', '0.5', '1', '1.5', '2', '2.5', '3'})
+        xticks([frames_b4-60,frames_b4, frames_b4+60, frames_b4+120, frames_b4+180])
+        xticklabels({'-1', '0', '1', '2', '3'})
+        ax = gca;
+        ax.FontSize = 20;
+        ax.TickDir = 'out';
+        ax.LineWidth = 1;
+        xlabel('Time (s)')
+        ax.TickLength = [0.02 0.02];
+        f = gcf;
+        f.Position = [127   421   357   271];
+        %         x.YAxis.Visible = 'off';
+        %         x.XAxis.Visible = 'off';
+        
+    elseif i ==2
+        all_ani = find(string(xy_opto_infoA.Geno) == "het");
+        n_trials_ani = numel(all_ani);
+        
+        figure
+        rectangle('Position', [frames_b4 0 60 90], 'FaceColor', [0.67 0.84 0.9, 0.4], 'EdgeColor', [0.67 0.84 0.9]) %xy wh
+        hold on
+        v = 1;
+        
+        for j = 1:n_EC %[3,4,8,12,15,17,19,20]  %1:n_EC %[2,3,5,8,10,11,12] [3,6,8,12,15,17,19,20]  %
+            EC_str = all_EC(j,1);
+            all_ani_EC = find(cell2mat(xy_opto_infoA.EC) == EC_str & string(xy_opto_infoA.Geno) == "het" & cell2mat(xy_opto_infoA.SpAt)>2); %& cell2mat(xy_opto_infoA.DShelt_LIGHT) >5 & cell2mat(xy_opto_infoA.Return2Shelter)==1 
+            
+            %             col = 1 -[v/n_EC v/n_EC v/n_EC]*0.8;
+            col = [1, cols2(v), cols2(v)];
+
+            if ~isempty(all_ani_EC)
+                if numel(all_ani_EC)>1
+                    av_resp = mean(xy_optoA(all_ani_EC, :));
+                else
+                    av_resp = (xy_optoA(all_ani_EC, :));
+                end
+                plot(av_resp, 'Color', col, 'LineWidth', 1.2);
+                hold on
+            end
+            v = v+1;
+            %             xticklabels({''})
+        end
+        %         plot([frames_b4 frames_b4], [0 90], 'k:', 'LineWidth', 1.2)
+        %         plot([frames_b4+total_lighton_frames frames_b4+total_lighton_frames], [0 90], 'k:', 'LineWidth', 1)
+        axis([500 800 0 50])
+        box off
+        ylabel('Speed (cm s^-1)')
+        xlabel('Time (s)')
+        %         xticks([510, 540, 570, 600, 630, 660, 690, 720, 750, 780])
+        %         xticks([frames_b4-90, frames_b4-60, frames_b4-30, frames_b4, frames_b4+30, frames_b4+60, frames_b4+90, frames_b4+120, frames_b4+150, frames_b4+180])
+        %         xticklabels({'-1.5', '-1', '-0.5', '0', '0.5', '1', '1.5', '2', '2.5', '3'})
+        xticks([frames_b4-60,frames_b4, frames_b4+60, frames_b4+120, frames_b4+180])
+        xticklabels({'-1', '0', '1', '2', '3'})
+        
+        ax = gca;
+        ax.FontSize = 20;
+        ax.TickDir = 'out';
+        ax.LineWidth = 1;
+        ax.TickLength = [0.02 0.02];
+        f = gcf;
+        f.Position = [127   421   357   271];
+        %         ax.YAxis.Visible = 'off';
+        %         ax.XAxis.Visible = 'off';
+        
+    end
+end
+
+f.Renderer = 'painters';
+
+
+%% CUSTOM COLOURMAP
+
+m1 = interp1([1,100], [176, 255], [1:1:100]);
+mp1 = [(m1/255)', zeros(100,1),zeros(100,1)];
+
+m2 = interp1([1,100], [0, 220], [1:1:100]);
+mp2 = [ones(100,1), (m2/255)', (m2/255)'];
+
+mapp = vertcat(mp1, mp2);
+
+mapp = [176 0 0; 223 0 0; 255 60 60; 255 102 102; 255 133 133; 255 174 174; 255 220 220];
+mapp = mapp/255;
+
+figure; colorbar; colormap((mapp))
+
+
+%% Add columns - arrest behaviour - for OPTO
+% xy_opto = the speed of the animal over 1200 frames - 10s before and 10s
+% after.
+% Row 600 = LIGHT ON 
+
+rowsb4 = 600; 
+
+for i = 1:numel(xy_analysis(:,1))
+    
+    x = xy_opto(i,:); 
+
+    sp_at = nanmean(x(rowsb4-5:rowsb4+5));
+    sp_immed = nanmean(x(rowsb4+18:rowsb4+48)); %nanmean
+    
+    xy_analysis.speedat{i} = sp_at;
+    xy_analysis.speed_immed{i} = sp_immed;
+    xy_analysis.DeltaImmed{i} = sp_immed/sp_at; 
+    
+end 
+
+
+
+%% PSYCHOMETRIC CURVES - for the different experiments
+% MEAN/SEM
+
+% SET YOUR VAL NUMBER - COLUMN TO ASSESS
+%     val = 19;  % MaxSp
+val = 25; % T2M
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+% 1 - LASER POWER - use xy_analysisA etc.
+
+all_EC = unique(cell2mat(xy_opto_infoA.EC));
+n_EC = numel(all_EC);
+
+yWT = [];
+yHET = [];
+semWT = [];
+semHET = [];
+
+id = 1;
+
+% figure
+% Return to shelter - [6,8,11,14,16,18]
+for i = [2,3,5,6,7,8,10,11] %[3,4,6,8,11,14,16,18,19,20] %1:n_EC %[4,6,8,11,14,16,18,19] %[2,3,5,8,10,11,12, 13] %[6,8,9,11,14,16,18,19]  %% %  %[1,3,4,5,6,7,9,12,13,14]%1:numel(all_EC) % 1:n_EC    
+    EC_val = all_EC(i);
+
+    all_WT = find(string(xy_opto_infoA.Geno) == "wt" & cell2mat(xy_opto_infoA.EC)==EC_val); % & cell2mat(xy_opto_infoA.SpAt)>2 &cell2mat(xy_opto_infoA.DShelt_LIGHT)>0 & cell2mat(xy_opto_infoA.Return2Shelter)==1); %& cell2mat(xy_opto_infoA.Return2Shelter)==1
+    all_HET = find(string(xy_opto_infoA.Geno) == "het" & cell2mat(xy_opto_infoA.EC)==EC_val); %  & cell2mat(xy_opto_infoA.SpAt)>2 & cell2mat(xy_opto_infoA.DShelt_LIGHT)>0 & cell2mat(xy_opto_infoA.Return2Shelter)==1);
+    
+    dataa = (cell2mat(xy_analysis{all_WT, val}));
+%     dataa = cell2mat(xy_opto_infoA{all_WT, val});
+    yWT(id,1) = nanmean(dataa);
+    semWT(id,1) = nanstd(dataa)/sqrt(numel(dataa));
+    
+%     dataa2 = cell2mat(xy_opto_infoA{all_HET, val});
+    dataa2 = (cell2mat(xy_analysis{all_HET, val}));
+    yHET(id,1) = nanmean(dataa2);
+    semHET(id,1) = nanstd(dataa2)/sqrt(numel(dataa2));
+    
+    numWT(id,1) = numel(dataa);
+    numHET(id,1) = numel(dataa2);
+    
+    id = id+1;
+    
+end
+
+% EC_VALS = all_EC;
+EC_VALS = all_EC([1,2,5,6,7,8,10,11], 1);
+% EC_VALS = all_EC([3,4,6, 8,11,14,16,18,19,20], 1);
+% EC_VALS = all_EC([6,8,11,14,16,18] , 1);
+% EC_VALS = all_EC([4,6,8,11,14,16,18,19],1);
+% EC_VALS = all_EC([6,8,9,11,14,16,18,19], 1);
+% EC_VALS = all_EC([2,3,5,8,10,11,12, 13],1);
+
+figure
+% [param,stat]=sigm_fit(EC_VALS,yWT,[],[],[], 'k')
+% hold on 
+% [param2,stat2]=sigm_fit(EC_VALS,yHET,[],[],[], 'r')
+
+
+errorbar(EC_VALS, yWT, semWT, 'o', 'CapSize', 0, 'Color', [0 0 0], 'MarkerFaceColor', [0.7 0.7 0.7],'MarkerEdgeColor', 'none',  'MarkerSize', 10, 'LineWidth', 1.75)
+hold on
+errorbar(EC_VALS, yHET, semHET, 'o', 'CapSize', 0, 'Color', [1 0 0], 'MarkerFaceColor', [1 0.7 0.7] , 'MarkerEdgeColor','none', 'MarkerSize', 10, 'LineWidth', 1.75) %[1 0.8 0.8]
+errorbar(EC_VALS, yWT, semWT, 'o', 'CapSize', 0, 'Color', [0.2 0.2 0.2], 'Marker', 'none', 'LineWidth', 1.75)
+errorbar(EC_VALS, yHET, semHET, 'o', 'CapSize', 0, 'Color', [1 0.2 0.2],'Marker', 'none', 'LineWidth', 1.75)
+
+if val == 19 % MAxSP
+    ylim([0 80])
+    ylabel('Maximum Speed (cm s^-1)')
+elseif val == 20 % T2M
+    ylim([0 7])
+    ylabel('Time (s)')
+elseif val == 17 % DeltaImmed
+    ylim([0 8])
+    ylabel('Change in Speed (300-800ms)')
+elseif val == 18 % LOG DeltaImmed
+    ylim([-1.5 2])
+    ylabel('Log Change in Immed. Speed')
+elseif val == 23 % MaxAcc
+    ylim([0 8])
+    ylabel('Maximum Acc. (cm s^-2)')
+elseif val == 24 % Time to MaxAcc
+    ylim([0 7])
+    ylabel('Time (s)')
+elseif val == 12 % Return to shel
+    ylim([-0.05 1.05])
+    ylabel('Escape Probability')
+elseif val == 22 % Log Delta MAx
+    ylim([0 3])
+    ylabel('Log Delta Max')
+elseif val == 21 % DeltaImmed
+    ylim([0 14])
+    ylabel('MaxSp/SpeedAtTrigger')
+end
+
+xlabel('Laser Power')
+xlim([1.3 3.75])
+box off
+ax = gca;
+ax.FontSize = 18;
+ax.LineWidth = 2;
+ax.TickDir = 'out';
+ax.TickLength =[0.02 0.02];
+f = gcf;
+f.Position = [1030 403  335  300]; %[680   779   354   319]; %[680   793   398   305];
+
+%% CORRELATION STATISTICS
+
+all_WT = find(string(xy_analysis.Geno) == "wt" ); % & cell2mat(xy_analysis.EC)>1.5); 
+all_HET = find(string(xy_analysis.Geno) == "het"); % & cell2mat(xy_analysis.EC)>1.5);% & cell2mat(xy_analysis.EC)>1.5); 
+
+% WT
+xvals = cell2mat(xy_analysis.EC(all_WT));
+yvals = cell2mat(xy_analysis.MaxSpEscape(all_WT));
+
+% HET
+xvals = cell2mat(xy_analysis.EC(all_HET));
+yvals = log(cell2mat(xy_analysis.DeltaImmed(all_HET)));
+
+% STATS - PEARSON
+[R, P, RL, RU] = corrcoef(xvals, yvals)
+
+%% Repeated measures ANOVA (N-way)
+% Analyse WT/HET separately. 
+% Assessing the variance / difference between mean values at different
+% laser powers in WT/ HET separately. 
+
+% Make 'subset table' with just the trials from the laser power values and
+% genotype I'm interested in. 
+EC_VALS_OF_INTEREST = find(cell2mat(xy_opto_infoA.EC) == 1.75 | cell2mat(xy_opto_infoA.EC) == 1.9 | cell2mat(xy_opto_infoA.EC) == 2.00 |  cell2mat(xy_opto_infoA.EC) == 2.25 | cell2mat(xy_opto_infoA.EC) == 2.5 | cell2mat(xy_opto_infoA.EC) == 2.75 | cell2mat(xy_opto_infoA.EC) == 3.0 | cell2mat(xy_opto_infoA.EC) == 3.25 | cell2mat(xy_opto_infoA.EC) == 3.5);
+
+tbl_info_EC = xy_opto_infoA(EC_VALS_OF_INTEREST, :);
+
+vals_2_remov = find(cell2mat(tbl_info_EC.SpAt)<2);
+tbl_info_EC(vals_2_remov, :) = []; 
+
+% tbl_EC = xy_optoA(EC_VALS_OF_INTEREST, :);
+
+% allWT = find(string(tbl_info_EC.Geno) =="wt");
+% tbl_info_WT = tbl_info_EC(allWT, :);
+% % tblWT = tbl_EC(allWT, :);
+% 
+% allHET = find(string(tbl_info_EC.Geno) =="het");
+% tbl_info_HET = tbl_info_EC(allHET, :);
+% % tbl_HET = tbl_EC(allHET, :);
+
+y = cell2mat(tbl_info_EC.LogDeltaImmed);
+gp1 = string(tbl_info_EC.Geno);
+gp2 = cell2mat(tbl_info_EC.EC); 
+
+[p, tbl, stats] = anovan(y, {gp1, gp2}, 'model', 'interaction', 'varnames', {'Geno', 'LaserPower'})
+results = multcompare(stats, 'Dimension', [1,2], 'CType', 'bonferroni')
+
+
+
+
+
+% Repeated measure ANOVA
+y = cell2mat(tbl_info_WT.DeltaImmed);
+gp1 = cell2mat(tbl_info_WT.EC); 
+
+y2 = cell2mat(tbl_info_HET.DeltaImmed);
+gp2 = cell2mat(tbl_info_HET.EC); 
+
+[p, tbl, stats] = anovan(y, gp1);
+results = multcompare(stats, 'CType', 'bonferroni')
+
+
+
+
+
+y = vertcat(WT_C1, WT_C3, WT_C4, HET_C1, HET_C3, HET_C4); 
+gp1 = vertcat(ones(1,nW1)', (ones(1,nW3)*2)', (ones(1,nW4)*3)', (ones(1,nH1))', (ones(1,nH3)*2)', (ones(1,nH4)*3)'); % CONTRAST
+gp2 = vertcat(ones(1,nW1+nW3+nW4)', (ones(1,nH1+nH3+nH4)*2)'); % GENO
+
+
+% n way ANOVA
+[p, tbl, stats] = anovan(y, {gp1, gp2}, 'model', 'interaction', 'varnames', {'Contrast', 'Geno'})
+results = multcompare(stats, 'Dimension', [1,2], 'CType', 'bonferroni')
+
+%% NEED TWO WAY  - REPEATED MEASURES ANOVA. 
+
+% ranovatbl = ranvova(rm, 'WithinModel', WM);
+
+% COl 1 = GENO
+% COl 2 = LP1
+% Col 2 = LP2
+% COl 3= LP3.... 
+
+% Need animal average... % Each 'unit' needs to be measured the same amount
+% of times... 
+
+% Table will be 4+4 height - 8 ROWS
+% Col 1 = GENO
+% Col 2- Col 9 = EC vals
+
+num_EC = numel(EC_VALS);
+n_ani = numel(all_animals);
+vtypes = {'double' 'double', 'double', 'double','double' 'double', 'double', 'double','double', 'double'};
+vnames = {'GENO', 'EC1', 'EC2', 'EC3', 'EC4', 'EC5', 'EC6', 'EC7', 'EC8', 'EC9'};
+tbl_X = table('Size', [n_ani, num_EC+1], 'VariableTypes', vtypes, 'VariableNames', vnames);
+
+for i = 1:num_EC
+    
+    EC = EC_VALS(i);
+    
+    for j = 1:n_ani
+        
+        anii = all_animals{j};
+        all_ani = find(string(xy_opto_infoA.Animal) == anii & cell2mat(xy_opto_infoA.EC)==EC);
+        
+        vals = cell2mat(xy_opto_infoA.MaxSp(all_ani));
+        if ~isempty(vals)
+            tbl_X{j,i+1} = nanmean(vals);
+        else
+            tbl_X{j,i+1} = NaN;
+        end 
+        
+        if~isempty(all_ani)
+            vg = string(xy_opto_infoA.Geno(all_ani(1)));
+            if vg == "wt"
+                tbl_X.GENO(j) = 1;
+            else
+                tbl_X.GENO(j) = 2;
+            end 
+        end 
+        
+    end 
+    
+end 
+
+
+y = cell2mat(tbl_info_EC.LogDeltaImmed);
+gp1 = string(tbl_info_EC.Geno);
+gp2 = cell2mat(tbl_info_EC.EC); 
+
+
+rm = fitrm(tbl_X, 'EC1-EC9~GENO', 'WithinModel', 'separatemeans')
+
+Mrm1 = multcompare(rm, '', 'By', 'GENO', 'ComparisonType','bonferroni')
+
+ranovatbl = ranova(rm)
+
+
+%%
+
+num_EC = numel(EC_VALS);
+n_ani = numel(all_animals);
+vtypes = {'double' 'double', 'double', 'double','double' 'double', 'double', 'double','double', 'double'};
+vnames = {'GENO', 'EC1', 'EC2', 'EC3', 'EC4', 'EC5', 'EC6', 'EC7', 'EC8', 'EC9'};
+tbl_X = table('Size', [n_ani, num_EC+1], 'VariableTypes', vtypes, 'VariableNames', vnames);
+
+arrayyWT = NaN(100, 10);
+arrayyHET = NaN(100, 10);
+
+for i = 1:num_EC
+    
+    EC = EC_VALS(i);
+    
+    for j = 1:2
+        
+        if j == 1
+            all_ani = find(string(xy_opto_infoA.Geno) == "wt" & cell2mat(xy_opto_infoA.EC)==EC);
+            vals = cell2mat(xy_opto_infoA.LogDeltaImmed(all_ani));
+            
+            if ~isempty(vals)
+                nval = numel(vals);
+                arrayyWT(1:nval,i) = (vals);
+            end
+            
+            
+        elseif j == 2
+            
+            all_ani = find(string(xy_opto_infoA.Geno) == "het" & cell2mat(xy_opto_infoA.EC)==EC);
+            vals = cell2mat(xy_opto_infoA.LogDeltaImmed(all_ani));
+            
+            if ~isempty(vals)
+                nval = numel(vals);
+                arrayyHET(1:nval,i) = (vals);
+  
+            end
+          
+       
+        end
+        
+    end
+    
+end
+
+
+%% PSYCHOMETRIC CURVES - for the different experiments
+% MEAN/SEM
+
+% SET YOUR VAL NUMBER - COLUMN TO ASSESS
+val = 19;
+%- col28 = maxspescape %
+% col 29 - T2M
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+% 1 - LASER POWER - use xy_analysisA etc.
+
+all_EC = unique(cell2mat(xy_opto_infoA.EC));
+n_EC = numel(all_EC);
+
+yWT = [];
+yHET = [];
+semWT = [];
+semHET = [];
+
+id = 1;
+
+% figure
+for i = [2,3,5,8,10,11,12, 13] %  %[1,3,4,5,6,7,9,12,13,14]%1:numel(all_EC) % 1:n_EC
+    EC_val = all_EC(i);
+    
+    all_WT = find(string(xy_analysisA.Geno) == "wt" & cell2mat(xy_analysisA.EC)==EC_val & cell2mat(xy_analysisA.DShelt_Start)>10);
+    all_HET = find(string(xy_analysisA.Geno) == "het" & cell2mat(xy_analysisA.EC)==EC_val & cell2mat(xy_analysisA.DShelt_Start)>10); % & cell2mat(xy_analysisa.MaxSpEscape)>15 & cell2mat(xy_analysisA.ReturnToShelter)==1
+    
+    dataa = cell2mat(xy_analysisA{all_WT, val});
+    yWT(id,1) = nanmean(dataa);
+    semWT(id,1) = nanstd(dataa)/sqrt(numel(dataa));
+    
+    dataa2 = cell2mat(xy_analysisA{all_HET, val});
+    yHET(id,1) = nanmean(dataa2);
+    semHET(id,1) = nanstd(dataa2)/sqrt(numel(dataa2));
+    
+    id = id+1;
+    
+end
+
+% EC_VALS = all_EC;
+EC_VALS = all_EC([2,3,5,8,10,11,12, 13],1);
+
+figure
+errorbar(EC_VALS, yWT, semWT, 'o', 'CapSize', 0, 'Color', [0 0 0], 'MarkerFaceColor', [0.7 0.7 0.7],'MarkerEdgeColor', 'none',  'MarkerSize', 10, 'LineWidth', 1.75)
+hold on
+errorbar(EC_VALS, yHET, semHET, 'o', 'CapSize', 0, 'Color', [1 0 0], 'MarkerFaceColor', [1 0.7 0.7] , 'MarkerEdgeColor','none', 'MarkerSize', 10, 'LineWidth', 1.75) %[1 0.8 0.8]
+errorbar(EC_VALS, yWT, semWT, 'o', 'CapSize', 0, 'Color', [0.4 0.4 0.4], 'Marker', 'none', 'LineWidth', 1.75)
+errorbar(EC_VALS, yHET, semHET, 'o', 'CapSize', 0, 'Color', [1 0.4 0.4],'Marker', 'none', 'LineWidth', 1.75)
+
+if val == 28 % MAxSP
+    ylim([0 90])
+    ylabel('Maximum Speed (cm s^-1)')
+elseif val == 29 % T2M
+    ylim([0 7])
+    ylabel('T2M (s)')
+end
+
+xlabel('Laser Power')
+xlim([1.25 3.25])
+box off
+ax = gca;
+ax.FontSize = 18;
+ax.LineWidth = 2;
+ax.TickDir = 'out';
+ax.TickLength =[0.02 0.02];
+f = gcf;
+f.Position = [680   793   398   305];
+
+
